@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Ver Filmes{% endblock %}
+
+{% block content %}
+    <h1>Filmes</h1>
+    {% for video in videos %}
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ video.name }}</h5>
+            <p class="card-text">Views: {{ video.views }}</p>
+            <p class="card-text">Likes: {{ video.likes }}</p>
+        </div>
+    </div>
+    {% endfor %}
+{% endblock %}

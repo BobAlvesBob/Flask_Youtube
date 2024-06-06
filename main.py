@@ -1,12 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect
 from flask_restful import Api, Resource, reqparse, abort, fields, marshal_with
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-db = SQLAlchemy(app)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+db = SQLAlchemy(app)
 
 class VideoModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,72 +18,35 @@ class VideoModel(db.Model):
     def __repr__(self):
         return f"Video(name={self.name}, views={self.views}, likes={self.likes})"
 
+# Outras definições de rotas e classes podem ir aqui
 
-video_put_args = reqparse.RequestParser()
-video_put_args.add_argument("name", type=str, help="Name of the video "
-                                                   "required.", required=True)
-video_put_args.add_argument("views", type=int, help="Views", required=True)
-video_put_args.add_argument("likes", type=int, help="Likes", required=True)
-
-video_update_args = reqparse.RequestParser()
-video_update_args.add_argument("name", type=str, help="Name of the video "
-                                                   "required.")
-video_update_args.add_argument("views", type=int, help="Views")
-video_update_args.add_argument("likes", type=int, help="Likes")
-
-resource_fields = {
-    'id': fields.Integer,
-    'name': fields.String,
-    'views': fields.Integer,
-    'likes': fields.Integer
-}
+@app.route('/')
+def index():
+    videos = VideoModel.query.all()  # Pega todos os vídeos do banco de dados
+    print(videos)  # Isto deve mostrar os objetos Video no console
+    return render_template('index.html', videos=videos)
 
 
-class Video(Resource):
-    @marshal_with(resource_fields)
-    def get(self, video_id):
-        result = VideoModel.query.filter_by(id=video_id).first()
-        if not result: abort(404, message="Video not found")
-        return result
 
-    @marshal_with(resource_fields)
-    def put(self, video_id):
-        args = video_put_args.parse_args()
-        result = VideoModel.query.filter_by(id=video_id).first()
-        if result:
-            abort(409, message="Video already exists")
-        video = VideoModel(id=video_id, name=args['name'], views=args['views'], likes=args['likes'])
-        db.session.add(video)
+@app.route('/add_video', methods=['POST'])
+def add_video():
+    if request.method == 'POST':
+        video_name = request.form['name']
+        video_views = request.form['views']
+        video_likes = request.form['likes']
+        new_video = VideoModel(name=video_name, views=video_views, likes=video_likes)
+        db.session.add(new_video)
         db.session.commit()
-        return video, 201
-    @marshal_with(resource_fields)
-    def patch(self, video_id):
-        args = video_update_args.parse_args()
-        result = VideoModel.query.filter_by(id=video_id).first()
-        if not result:
-            abort(404, message="Video not found")
-        if args['name']:
-            result.name = args['name']
-        if args['views']:
-            result.views = args['views']
-        if args['likes']:
-            result.likes = args['likes']
+        return redirect('/')  # Redireciona para a página inicial após adicionar
+    
+@app.route('/add')
+def add():
+    return render_template('add.html')
 
-        db.session.commit()
+@app.route('/credits')
+def credits():
+    return render_template('credits.html')
 
-        return result
-
-
-    def delete(self, video_id):
-        video = VideoModel.query.filter_by(id=video_id).first()
-        if not video:
-            abort(404, message="Video doesn't exist...")
-        db.session.delete(video)
-        db.session.commit()
-        return '', 204
-
-
-api.add_resource(Video, "/video/<int:video_id>")
-
+# Certifique-se de que o app.run() esteja no final do arquivo
 if __name__ == "__main__":
     app.run(debug=True)
