@@ -5,9 +5,11 @@
 {% block content %}
     <h1>Filmes</h1>
     {% for video in videos %}
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
-            <h5 class="card-title">{{ video.name }}</h5>
+            <h5 class="card-title">
+                <a href="{{ url_for('video', video_id=video.id) }}">{{ video.name }}</a>
+            </h5>
             <p class="card-text">Views: {{ video.views }}</p>
             <p class="card-text">Likes: {{ video.likes }}</p>
         </div>

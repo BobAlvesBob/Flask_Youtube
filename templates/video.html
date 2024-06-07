@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.name }}{% endblock %}
+
+{% block content %}
+    <h1>{{ video.name }}</h1>
+    <p>Visualizações: {{ video.views }}</p>
+    <p>Curtidas: {{ video.likes }}</p>
+    <p>Upvotes: {{ upvotes }}</p>
+    <p>Downvotes: {{ downvotes }}</p>
+
+    <div>
+        <form action="/vote/{{ video.id }}" method="post">
+            <input type="hidden" name="user_id" value="1"> <!-- Ajuste conforme o sistema de usuários -->
+            <button name="vote" value="1" class="btn btn-success">Upvote</button>
+            <button name="vote" value="-1" class="btn btn-danger">Downvote</button>
+        </form>
+    </div>
+
+    <h2>Comentários</h2>
+    <ul>
+        {% for comment in comments %}
+        <li>
+            {{ comment.comment }} - Upvotes: {{ comment.upvotes }}
+            <form action="/vote_comment/{{ comment.id }}" method="post">
+                <input type="hidden" name="user_id" value="1"> <!-- Ajuste conforme o sistema de usuários -->
+                <button name="vote" value="1" class="btn btn-success">Upvote</button>
+                <button name="vote" value="-1" class="btn btn-danger">Downvote</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h3>Adicionar Comentário</h3>
+    <form action="/add_comment/{{ video.id }}" method="post">
+        <input type="hidden" name="user_id" value="1"> <!-- Ajuste conforme o sistema de usuários -->
+        <textarea name="comment" class="form-control" required></textarea>
+        <button type="submit" class="btn btn-primary">Adicionar Comentário</button>
+    </form>
+{% endblock %}
